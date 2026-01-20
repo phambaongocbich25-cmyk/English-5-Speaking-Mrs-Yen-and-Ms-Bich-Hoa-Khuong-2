@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English 5 Speaking</title>
+
+<style>
+body{
+  font-family:"Comic Sans MS",Arial,sans-serif;
+  background:linear-gradient(135deg,#e3f2fd,#ffffff);
+  margin:0;padding:16px
+}
+.container{
+  max-width:1100px;margin:auto;
+  background:#fff;padding:28px;
+  border-radius:30px;
+  box-shadow:0 14px 32px rgba(0,0,0,.25)
+}
+h1,h2{text-align:center;color:#0d47a1}
+.card{
+  background:#f5fbff;
+  padding:18px;margin-top:18px;
+  border-radius:22px;
+  border:3px dashed #90caf9
+}
+input,select,textarea{
+  width:100%;padding:12px;
+  border-radius:14px;
+  border:2px solid #bbdefb;
+  margin-top:8px;font-size:16px
+}
+button{
+  width:100%;padding:14px;margin-top:12px;
+  background:#1565c0;color:white;
+  border:none;border-radius:26px;
+  font-size:17px
+}
+button:active{transform:scale(.97)}
+.word{
+  display:inline-block;
+  padding:6px 10px;
+  margin:4px;
+  border-radius:14px;
+  cursor:pointer;
+  font-weight:bold
+}
+.correct{background:#c8e6c9;color:#1b5e20}
+.wrong{background:#ffccbc;color:#bf360c}
+.star{text-align:center;font-size:40px;margin-top:16px}
+.certificate{
+  display:none;
+  margin-top:60px;
+  padding:80px;
+  border-radius:40px;
+  background:linear-gradient(135deg,#fffde7,#ffffff);
+  border:10px double #fbc02d;
+  text-align:center
+}
+.cert-title{font-size:38px;color:#0d47a1;font-weight:bold}
+.cert-name{font-size:36px;font-weight:bold;margin:30px 0}
+.cert-text{font-size:22px;margin-top:18px}
+.sign{
+  margin-top:70px;
+  display:flex;
+  justify-content:space-around;
+  font-size:22px;
+  font-weight:bold
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>🎤 English 5 Speaking</h1>
+<h2>Speaking by Unit & Free Speaking</h2>
+
+<div class="card">
+  <input id="studentName" placeholder="Student name">
+  <input id="studentClass" placeholder="Class (5/3)">
+</div>
+
+<div class="card">
+  <select id="mode">
+    <option value="unit">Speaking by Unit</option>
+    <option value="free">Free Speaking</option>
+  </select>
+</div>
+
+<div class="card">
+  <select id="unit"></select>
+  <p id="unitTitle" style="font-weight:bold"></p>
+</div>
+
+<div class="card">
+  <textarea id="studentText" rows="4"
+  placeholder="Tap the microphone and speak..."></textarea>
+  <button id="recordBtn">🎙 Tap to speak</button>
+</div>
+
+<div class="card">
+  <h3>🤖 AI Feedback (tap words to listen)</h3>
+  <div id="feedback"></div>
+  <div class="star" id="starBox"></div>
+</div>
+
+<div class="certificate" id="certificate">
+  <div class="cert-title">CERTIFICATE OF ENGLISH SPEAKING</div>
+  <p class="cert-text">This certificate is proudly presented to</p>
+  <div class="cert-name" id="cName"></div>
+  <p class="cert-text" id="cClass"></p>
+  <p class="cert-text" id="cAchieve"></p>
+  <div class="star" id="cStar"></div>
+
+  <div class="sign">
+    <div>Mrs Tran Thi Kim Yen</div>
+    <div>Mrs Pham Thi Ngoc Bich</div>
+  </div>
+</div>
+
+</div>
+
+<audio id="clap" src="https://www.soundjay.com/human/applause-8.mp3"></audio>
+
+<script>
+function speak(text){
+  if(!text) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="en-GB";
+  u.rate=0.85;
+  speechSynthesis.speak(u);
+}
+
+/* ===== UNITS 1–20 ===== */
+const units={
+1:"Unit 1: All about me",
+2:"Unit 2: Our homes",
+3:"Unit 3: My foreign friends",
+4:"Unit 4: Our free-time activities",
+5:"Unit 5: My future job",
+6:"Unit 6: Our school rooms",
+7:"Unit 7: Our favourite school activities",
+8:"Unit 8: In our classroom",
+9:"Unit 9: Our outdoor activities",
+10:"Unit 10: Our school trip",
+11:"Unit 11: Family time",
+12:"Unit 12: Our Tet holiday",
+13:"Unit 13: Our special days",
+14:"Unit 14: Staying healthy",
+15:"Unit 15: Our health",
+16:"Unit 16: Seasons and the weather",
+17:"Unit 17: Stories for children",
+18:"Unit 18: Means of transport",
+19:"Unit 19: Places of interest",
+20:"Unit 20: Our summer holidays"
+};
+
+const unitSel=document.getElementById("unit");
+for(let i=1;i<=20;i++){
+  unitSel.innerHTML+=`<option value="${i}">${units[i]}</option>`;
+}
+unitSel.onchange=()=>unitTitle.innerText=units[unitSel.value];
+unitTitle.innerText=units[1];
+
+/* ===== RECORD – MOBILE SAFE ===== */
+recordBtn.onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert("Speech recognition not supported");return;}
+  const rec=new SR();
+  rec.lang="en-GB";
+  rec.start();
+  recordBtn.innerText="🎙 Listening...";
+  rec.onresult=e=>{
+    const said=e.results[0][0].transcript.toLowerCase();
+    studentText.value=said;
+    analyseSpeech(said);
+    recordBtn.innerText="🎙 Tap to speak";
+  };
+};
+
+function analyseSpeech(text){
+  feedback.innerHTML="";
+  const words=text.replace(/[.,!?]/g,"").split(" ");
+  let wrong=0;
+
+  words.forEach(w=>{
+    const span=document.createElement("span");
+    span.className="word";
+    if(w.length<=2 || ["am","is","are","was","were","have","has","live","like","go","want"].includes(w)){
+      span.classList.add("correct");
+    }else{
+      span.classList.add("wrong");
+      wrong++;
+    }
+    span.innerText=w;
+    span.onclick=()=>speak(w);
+    feedback.appendChild(span);
+  });
+
+  let stars=wrong===0?5:wrong<=2?4:wrong<=4?3:wrong<=6?2:1;
+  starBox.innerText="⭐".repeat(stars);
+  clap.play();
+  showCert(stars);
+}
+
+function showCert(stars){
+  certificate.style.display="block";
+  cName.innerText=studentName.value;
+  cClass.innerText="Class: "+studentClass.value;
+  cAchieve.innerText=
+    mode.value==="unit"
+    ?`Has successfully achieved speaking practice in ${units[unitSel.value]}`
+    :"Has successfully achieved Free Speaking practice";
+  cStar.innerText="⭐".repeat(stars);
+}
+</script>
+</body>
+</html>
